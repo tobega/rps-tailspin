@@ -72,7 +72,7 @@ processor GameService
         when <{name: <=$game.players(1).name>}> do
           $ -> \(<{move:<>}> $.move !\) -> ..|@GameService($id).players(1): (move: $);
           $getStatus&{id: $id} !
-        when <{name: <~=$game.players(1).name>} ?($game.players <[](1)>)> do
+        when <?($game.players <[](1)>)> do
           ..|@GameService($id).players: {name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)};
             $getStatus&{id: $id} !
         when <{name: <=$game.players(2).name>}> do
