@@ -18,20 +18,20 @@ templates getWinner
     -> ($moves::length + $(1) - $(2)) mod $moves::length
     -> #
   when <=0> do
-    'nobody' !
+    'It''s a tie' !
   otherwise
-    $players($).name !
+    '$players($).name; wins' !
 end getWinner
 
 test 'rock, paper, scissors result'
   assert [$moves... -> [{name: 'A', move: $}, {name: 'B', move: $}] ->
-    getWinner] <[<='nobody'>+ VOID]> 'Same move is a tie'
+    getWinner] <[<='It''s a tie'>+ VOID]> 'Same move is a tie'
 
   assert [1..$moves::length -> [{name: 'A', move: $moves($)}, {name: 'B', move: $moves($ mod $moves::length + 1)}] ->
-    getWinner] <[<='B'>+ VOID]> 'One above wins'
+    getWinner] <[<='B wins'>+ VOID]> 'One above wins'
 
   assert [1..$moves::length -> [{name: 'A', move: $moves($)}, {name: 'B', move: $moves(($+1) mod $moves::length + 1)}] ->
-    getWinner] <[<='A'>+ VOID]> 'Two above loses'
+    getWinner] <[<='A wins'>+ VOID]> 'Two above loses'
 end 'rock, paper, scissors result'
 
 processor GameService
@@ -39,7 +39,7 @@ processor GameService
   source getStatus&{id:}
     templates describeStatus
       when <{players: <[<{move: <>}>=2]>}> do
-        {id: $id, status: '$.players -> getWinner; wins!', players: $.players, legalMoves: $moves} !
+        {id: $id, status: '$.players -> getWinner;', players: $.players, legalMoves: $moves} !
       when <{players: <[](1)>}> do
         {id: $id, status: '$.players(1).name; is waiting for an opponent', legalMoves: $moves} !
       otherwise
