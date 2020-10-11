@@ -1,0 +1,83 @@
+use 'java:io.undertow' stand-alone
+use 'java:io.undertow.server' stand-alone
+use 'java:io.undertow.util' stand-alone
+
+include 'json'
+include 'rps'
+
+def rpsService: $rps/GameService;
+
+sink sendResult&{exchange:}
+  templates checkResult
+    when <=''> do {statusCode: 404, body: ''} !
+    when <'.*'> do {statusCode: 400, body: $} !
+    otherwise {statusCode: 200, body: $} !
+  end checkResult
+  
+  def result:$ -> checkResult;
+  $result.statusCode -> exchange::setStatusCode -> !VOID
+  def headers: $exchange::getResponseHeaders;
+  ['Content-Type' -> util/HttpString, 'application/json'] -> headers::put -> !VOID
+  def sender: $exchange::getResponseSender;
+  $result.body -> json/serialize -> !sender::send
+end sendResult
+
+processor JsonPostCallback&{service:}
+  sink handle
+    def exchange: $(1);
+    $(2) -> json/parse -> service -> !sendResult&{exchange: $exchange}
+  end handle
+end JsonPostCallback
+
+templates getPathParameter&{exchange:}
+  def pathParameters: $exchange::getQueryParameters;
+  $ -> pathParameters::get -> $::iterator -> $::next !
+end getPathParameter
+
+composer toInt
+  <INT>
+end toInt
+
+processor CreateGameHandler
+  templates handleRequest
+    def exchange: $;
+    def receiver: $exchange::getRequestReceiver;
+    $JsonPostCallback&{service: rpsService::createGame} -> !receiver::receiveFullString
+  end handleRequest
+end CreateGameHandler
+
+processor GetGameStatusHandler
+  templates handleRequest
+    def exchange: $;
+    def id: 'id' -> getPathParameter&{exchange: $exchange} -> toInt;
+    $rpsService::getStatus&{id: $id} -> !sendResult&{exchange: $exchange}
+  end handleRequest
+end GetGameStatusHandler
+
+processor UpdateGameHandler
+  templates handleRequest
+    def exchange: $;
+    def id: 'id' -> getPathParameter&{exchange: $exchange} -> toInt;
+    def receiver: $exchange::getRequestReceiver;
+    $JsonPostCallback&{service: rpsService::updateGame&{id: $id}} -> !receiver::receiveFullString
+  end handleRequest
+end UpdateGameHandler
+
+source createRpsHandlers
+  def router: $server/RoutingHandler;
+  ['/games', $CreateGameHandler] -> router::post -> !VOID
+  ['/games/', $CreateGameHandler] -> router::post -> !VOID
+  ['/games/{id}', $GetGameStatusHandler] -> router::get -> !VOID
+  ['/games/{id}', $UpdateGameHandler] -> router::post -> !VOID
+  $router !
+end createRpsHandlers
+
+source createServer&{port:,name:}
+  def builder: $undertow/Undertow::builder;
+  def b1: [$port, $name] -> builder::addHttpListener;
+  def b2: $ -> b1::setHandler;
+  $b2::build !
+end createServer
+
+def server: $createRpsHandlers -> createServer&{port: 8080, name: 'localhost'};
+$server::start -> !VOID
