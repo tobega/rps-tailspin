@@ -35,9 +35,11 @@ processor GameService
 
   source getStatus&{id:}
     templates describeStatus
+      // players array contains two players with moves
       when <{players: <[<{move: <>}>=2]>}> do
         {id: $id, status: '$.players -> getWinner;', players: $.players, legalMoves: $moves} !
 
+      // there is currently only one player
       when <{players: <[](1)>}> do
         {id: $id, status: '$.players(1).name; is waiting for an opponent', legalMoves: $moves} !
 
@@ -59,7 +61,7 @@ processor GameService
 
     when <{move: <?($ -> findMoveIndex <=[]>)>}> do
       '$.move; is not a recognized move. Please pick one of $moves;' !
-      
+
     otherwise
       { players: [{name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)}]} -> ..|@GameService: $;
       $getStatus&{id:$@GameService::length}  !
@@ -69,18 +71,22 @@ processor GameService
     when <?($id <1..$@GameService::length>)> do
       def game: $@GameService($id);
       $ -> \(
+        // players array contains two players with moves
         when <?($game <{players: <[<{move: <>}>=2]>}>)> do
           'This game is already finished' !
 
         when <{move: <?($ -> findMoveIndex <=[]>)>}> do
           '$.move; is not a recognized move. Please pick one of $moves;' !
 
+        // input does not have a name of at least one character
         when <~{name: <'.+'>}> do 'Please give a name' !
 
         when <{name: <=$game.players(1).name>}> do
+          // If the input contains a move, add it or update it
           $ -> \(<{move:<>}> $.move !\) -> ..|@GameService($id).players(1): (move: $);
           $getStatus&{id: $id} !
 
+        // there is currently only one player
         when <?($game.players <[](1)>)> do
           ..|@GameService($id).players: {name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)};
             $getStatus&{id: $id} !
