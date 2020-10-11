@@ -1,0 +1,59 @@
+//requires 'java:io.undertow'
+//requires 'java:io.undertow.server'
+//requires 'java:io.undertow.util'
+
+sink sendResult&{exchange:}
+  def result:$ -> checkResult;
+  $result.statusCode -> exchange::setStatusCode -> !VOID
+  def headers: $exchange::getResponseHeaders;
+  ['Content-Type' -> util/HttpString, 'application/json'] -> headers::put -> !VOID
+  def sender: $exchange::getResponseSender;
+  $result.body -> json/serialize -> !sender::send
+end sendResult
+
+templates getParameters
+  [ $::getQueryParameters -> $::entrySet ... -> {key: $::getKey, value: [$::getValue...]} ] !
+end getParameters
+
+processor BodyReceiver&{service:}
+  sink handle
+    def exchange: $(1);
+    { parameters: $exchange -> getParameters,
+      body: $(2) } -> service::handleRequest -> !sendResult&{exchange: $exchange}
+  end handle
+end BodyReceiver
+
+processor PostHandler
+  @: $;
+  templates handleRequest
+    def receiver: $::getRequestReceiver;
+    $BodyReceiver&{service: $@PostHandler} -> !receiver::receiveFullString
+  end handleRequest
+end PostHandler
+
+processor GetHandler
+  @: $;
+  templates handleRequest
+    def exchange: $;
+    { parameters: $exchange -> getParameters } -> service::handleRequest -> !sendResult&{exchange: $exchange}
+  end handleRequest
+end GetHandler
+
+templates createHandler
+  def router: $server/RoutingHandler;
+  $... -> \(<{post: <>}> $!\) -> [$.post, $.handler -> PostHandler] -> router::post -> !VOID
+  $... -> \(<{get: <>}> $!\) -> [$.get, $.handler -> GetHandler] -> router::get -> !VOID
+  $router !
+end createHandler
+
+source createServer&{port:,name:}
+  def builder: $undertow/Undertow::builder;
+  def b1: [$port, $name] -> builder::addHttpListener;
+  def b2: $ -> b1::setHandler;
+  $b2::build !
+end createServer
+
+sink startServer&{port:,name:}
+  def server: $ -> createHandler -> createServer&{port: $port, name: $name};
+  $server::start -> !VOID
+end startServer
