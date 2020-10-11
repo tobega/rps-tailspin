@@ -100,3 +100,12 @@ processor GameService
     otherwise '' !
   end updateGame
 end GameService
+
+test 'simple game'
+  def service: $GameService;
+  def createResponse: {name: 'A', move: 'rock'} -> service::createGame;
+  assert $createResponse <{id:<>, status:<='A is waiting for an opponent'>}> 'create returns id and status'
+
+  assert {name: 'B', move: 'paper'} -> service::updateGame&{id: $createResponse.id}
+    <{id:<=$createResponse.id>, status:<='B wins'>}> 'join resolves game'
+end 'simple game'
