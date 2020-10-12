@@ -5,13 +5,15 @@ use 'http' with
 provided
 
 include 'rps'
+include 'json'
 
 def rpsService: $rps/GameService;
 
 templates convertRpsResult
-  when <=''> do {statusCode: 404, body: ''} !
+  when <=''> do {statusCode: 404} !
   when <'.*'> do {statusCode: 400, body: $} !
-  otherwise {statusCode: 200, body: $ -> json/serialize} !
+  otherwise {body: $ -> json/serialize,
+    headers:[{header:'Content-Type', value:'application/json'}]} !
 end convertRpsResult
 
 composer toInt

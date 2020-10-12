@@ -3,12 +3,12 @@
 //requires 'java:io.undertow.util'
 
 sink sendResult&{exchange:}
-  def result:$ -> checkResult;
+  def result: {statusCode: 200, headers: [], body: '', $...};
   $result.statusCode -> exchange::setStatusCode -> !VOID
   def headers: $exchange::getResponseHeaders;
-  ['Content-Type' -> util/HttpString, 'application/json'] -> headers::put -> !VOID
+  $result.headers... -> [$.header -> util/HttpString, $.value] -> headers::put -> !VOID
   def sender: $exchange::getResponseSender;
-  $result.body -> json/serialize -> !sender::send
+  $result.body -> !sender::send
 end sendResult
 
 templates getParameters
@@ -35,7 +35,7 @@ processor GetHandler
   @: $;
   templates handleRequest
     def exchange: $;
-    { parameters: $exchange -> getParameters } -> service::handleRequest -> !sendResult&{exchange: $exchange}
+    { parameters: $exchange -> getParameters } -> @GetHandler::handleRequest -> !sendResult&{exchange: $exchange}
   end handleRequest
 end GetHandler
 
