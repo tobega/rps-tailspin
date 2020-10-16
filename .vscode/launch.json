@@ -16,7 +16,8 @@
         "lib/wildfly-common-1.5.4.Final.jar",
         "lib/jboss-threads-3.2.0.Final.jar"
       ],
-      "args": "server.tt"
+      "args": "server.tt",
+      "env": {"TAILSPIN_MODULES":"modules" }
     },
     {
       "type": "java",

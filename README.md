@@ -3,7 +3,7 @@ A rock-paper-scissors server written in [tailspin](https://github.com/tobega/tai
 
 The purpose is to explore what might be good Tailspin style, how the Tailspin module system works and how Tailspin http APIs could be structured, beyond the simpler programming puzzles in Rosettacode or Adventofcode.
 
-The game logic is in rps.tt, the http server (and main program) is in server.tt with json parsing in json.tt. Further development will aim to encapsulate the Undertow usage in a tailspin module.
+The game logic is in rps.tt, the http server (and main program) is in server.tt with json parsing in json.tt. The Undertow usage is in a tailspin module in modules/undertow/http.tt.
 
 ## Starting the server
 You need the following dependencies (or equivalent):
@@ -18,7 +18,7 @@ You need the following dependencies (or equivalent):
 
 Then run
 ```
-java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar:lib/undertow-core-2.2.1.Final.jar:lib/xnio-api-3.8.2.Final.jar:lib/xnio-nio-3.8.2.Final.jar:lib/jboss-logging-3.4.1.Final.jar:lib/wildfly-common-1.5.4.Final.jar:lib/jboss-threads-3.2.0.Final.jar" tailspin.Tailspin server.tt
+TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar:lib/undertow-core-2.2.1.Final.jar:lib/xnio-api-3.8.2.Final.jar:lib/xnio-nio-3.8.2.Final.jar:lib/jboss-logging-3.4.1.Final.jar:lib/wildfly-common-1.5.4.Final.jar:lib/jboss-threads-3.2.0.Final.jar" tailspin.Tailspin server.tt
 ```
 
 ## Playing the game
