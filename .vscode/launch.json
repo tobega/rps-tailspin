@@ -3,6 +3,13 @@
   "configurations": [
     {
       "type": "java",
+      "name": "CodeLens (Launch) - Main",
+      "request": "launch",
+      "mainClass": "Main",
+      "projectName": "rps-tailspin_a2acfb66"
+    },
+    {
+      "type": "java",
       "name": "RPS",
       "request": "launch",
       "mainClass": "tailspin.Tailspin",
@@ -16,8 +23,10 @@
         "lib/wildfly-common-1.5.4.Final.jar",
         "lib/jboss-threads-3.2.0.Final.jar"
       ],
-      "args": "server.tt",
-      "env": {"TAILSPIN_MODULES":"modules" }
+      "args": "jdkserver.tt",
+      "env": {
+        "TAILSPIN_MODULES": "modules"
+      }
     },
     {
       "type": "java",
@@ -28,7 +37,7 @@
         "lib/tailspin.jar",
         "lib/antlr-runtime-4.8.jar"
       ],
-      "args": "--test rps.tt"
+      "args": "--test modules/jdk/http.tt"
     }
   ]
 }

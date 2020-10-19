@@ -1,0 +1,101 @@
+templates toByteArray
+  def javaString: $ -> lang/String;
+  'utf-8' -> $javaString::getBytes !
+end toByteArray
+
+composer pathParts
+  [<='/'|'\w+'>+]
+end pathParts
+
+composer queryParams
+  <params>?
+  rule params: <param> <nextParam>*
+  rule param: { key: <'\w+'>, (<='='>) value: <'\w+'> }
+  rule nextParam: (<='&'>) <param>
+end queryParams
+
+test 'param decomposition'
+  assert ['name=jane' -> queryParams] <=[{key:'name', value:'jane'}]> 'param'
+  assert ['name=jane&foo=bar' -> queryParams] <=[{key: 'name', value:'jane'}, {key: 'foo', value:'bar'}]> 'two params'
+  assert ['name=jane&foo=bar&name=tom' -> queryParams]
+    <=[{key: 'name', value: 'jane'}, {key: 'foo', value: 'bar'}, {key: 'name', value:'tom'}]> 'duplicate param'
+end  'param decomposition'
+
+
+templates matchUri&{uri:}
+  sink appendParam
+    def param: $;
+    $@matchUri.parameters -> \[i](<{key:<=$param.key>}> $i!\) -> \(
+      when <=[]> do ..|@matchUri.parameters: {key: '$param.key;', value: [$param.value]};
+      otherwise ..|@matchUri.parameters($(1)).value: $param.value;
+    \) -> !VOID
+  end appendParam
+
+  processor EqualityMatcher
+    @: $;
+    templates matchFirst
+      <?($(1) <=$@EqualityMatcher>)> $(2..last) !
+    end matchFirst
+  end EqualityMatcher
+
+  processor ParameterMatcher
+    @: $;
+    templates matchFirst
+      { key: '$@ParameterMatcher;', value: $(1)} -> !appendParam
+      $(2..last) !
+    end matchFirst
+  end ParameterMatcher
+
+  composer pathMatchers
+    [<parameter|part>+]
+    rule parameter: (<='{'>) <'\w+'> -> ParameterMatcher  (<='}'>)
+    rule part: <='/'|'\w+'> -> EqualityMatcher
+  end pathMatchers
+
+  def handler: $.handler;
+  @: { match: $.path -> pathMatchers, parameters: [] };
+  $uri::getPath -> pathParts -> #
+
+  when <=[] ?($@.match <=[]>)> do
+    $uri::getQuery -> queryParams -> !appendParam
+    {parameters: $@.parameters, handler: $handler} !
+
+  when <[](1..) ?($@.match <[](1..)>)> do
+    def matcher: ^@.match(1);
+    $ -> matcher::matchFirst -> #
+end matchUri
+
+processor RoutingContext
+  @: $;
+  sink handle
+    def exchange: $;
+    def handler: [$exchange::getRequestMethod -> \(
+      <'GET'> $@RoutingContext... -> \(<{get:<>}> {path: $.get, handler: $.handler} !\) !
+      <'POST'> $@RoutingContext... -> \(<{post:<>}> {path: $.post, handler: $.handler} !\) !
+    \) -> matchUri&{uri: $exchange::getRequestURI}] -> \(
+      when <=[]> do {parameters: [], handler: $NotFoundHandler} !
+      otherwise $(1) !
+    \);
+    def requestBody: $exchange::getRequestBody -> io/InputStreamReader -> io/BufferedReader -> \(
+      def reader: $;
+      @: [];
+      $reader::readLine -> #
+      '$@... -> '$;$#10;';' !
+      <> ..|@: $; $reader::readLine -> #
+    \);
+    def result: {parameters: $handler.parameters, body: $requestBody} -> handler.handler::handleRequest ->
+      {statusCode: 200, headers: [], body: '', $...};
+    def responseBody: $result.body -> toByteArray;
+    // ridiculous to get length of byte array via ByteArrayInputStream
+    [$result.statusCode, $responseBody -> io/ByteArrayInputStream -> $::available] -> !exchange::sendResponseHeaders
+    def os: $exchange::getResponseBody;
+    $responseBody -> os::write -> !VOID
+    $os::close -> !VOID
+  end handle
+end RoutingContext
+
+processor NotFoundHandler
+  templates handleRequest
+    {statusCode: 404, body: ''} !
+  end handleRequest
+end NotFoundHandler

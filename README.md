@@ -3,12 +3,19 @@ A rock-paper-scissors server written in [tailspin](https://github.com/tobega/tai
 
 The purpose is to explore what might be good Tailspin style, how the Tailspin module system works and how Tailspin http APIs could be structured, beyond the simpler programming puzzles in Rosettacode or Adventofcode.
 
-The game logic is in rps.tt, the http server (and main program) is in server.tt with json parsing in json.tt. The Undertow usage is in a tailspin module in modules/undertow/http.tt.
+The game logic is in rps.tt, the main program is in server.tt with json parsing in json.tt.
+The Undertow usage is in a tailspin module in modules/undertow/http.tt.
+
+There is also a second version which replaces Undertow with the jdk built-in http server. The main program there is jdkserver.tt which includes the Tailspin code from server.tt.
+The http module is in modules/jdk/http.tt and exposes the same API as the undertow module.
 
 ## Starting the server
-You need the following dependencies (or equivalent):
+You need the following dependencies to run Tailspin code:
         "lib/tailspin.jar",
-        "lib/antlr-runtime-4.8.jar",
+        "lib/antlr-runtime-4.8.jar"
+
+### Undertow version
+For the undertow version of the code you additionally need these dependencies (or equivalent)
         "lib/undertow-core-2.2.1.Final.jar",
         "lib/xnio-api-3.8.2.Final.jar",
         "lib/xnio-nio-3.8.2.Final.jar",
@@ -19,6 +26,13 @@ You need the following dependencies (or equivalent):
 Then run
 ```
 TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar:lib/undertow-core-2.2.1.Final.jar:lib/xnio-api-3.8.2.Final.jar:lib/xnio-nio-3.8.2.Final.jar:lib/jboss-logging-3.4.1.Final.jar:lib/wildfly-common-1.5.4.Final.jar:lib/jboss-threads-3.2.0.Final.jar" tailspin.Tailspin server.tt
+```
+
+### JDK version
+The version that uses the built-in http-server from the jdk needs no additional dependencies.
+Just run
+```
+TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar" tailspin.Tailspin jdkserver.tt
 ```
 
 ## Playing the game

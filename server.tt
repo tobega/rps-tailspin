@@ -35,13 +35,14 @@ end GetGameStatusHandler
 
 processor UpdateGameHandler
   templates handleRequest
-  def id: $.parameters... -> \(<{key: <='id'>}> $.value(1) !\) -> toInt;
-  $.body -> json/parse -> rpsService::updateGame&{id: $id} -> convertRpsResult !
+    def id: $.parameters... -> \(<{key: <='id'>}> $.value(1) !\) -> toInt;
+    $.body -> json/parse -> rpsService::updateGame&{id: $id} -> convertRpsResult !
   end handleRequest
 end UpdateGameHandler
 
-[{post: '/games', handler: $CreateGameHandler},
-  {post: '/games/', handler: $CreateGameHandler},
+def config: [{post: '/games', handler: $CreateGameHandler},
   {get: '/games/{id}', handler: $GetGameStatusHandler},
   {post: '/games/{id}', handler: $UpdateGameHandler}
-] -> !http/startServer&{port: 8080, name: 'localhost'}
+];
+
+$config -> !http/startServer&{port: 8080, name: 'localhost'}
