@@ -1,5 +1,5 @@
 # rps-tailspin
-A rock-paper-scissors server written in [tailspin](https://github.com/tobega/tailspin-v0) (with a little help from an [Undertow](https://undertow.io) server)
+A rock-paper-scissors server written in [tailspin](https://github.com/tobega/tailspin-v0) (with a little help from the built-in server in the jdk or an [Undertow](https://undertow.io) server)
 
 The purpose is to explore what might be good Tailspin style, how the Tailspin module system works and how Tailspin http APIs could be structured, beyond the simpler programming puzzles in Rosettacode or Adventofcode.
 
@@ -9,7 +9,10 @@ The Undertow usage is in a tailspin module in modules/undertow/http.tt.
 There is also a second version which replaces Undertow with the jdk built-in http server. The main program there is jdkserver.tt which includes the Tailspin code from server.tt.
 The http module is in modules/jdk/http.tt and exposes the same API as the undertow module.
 
-## Starting the server
+## Starting the server using gradle
+Type the command `gradle undertow` to run the undertow version, or `gradle jdkserver` to run the plain jdk version.
+
+## Starting the server manually
 You need the following dependencies to run Tailspin code:
         "lib/tailspin.jar",
         "lib/antlr-runtime-4.8.jar"
@@ -51,7 +54,7 @@ Get games/{id}, e.g. `curl -i http://localhost:8080/games/1`
 To add the second player and/or make or change a move, post to games/{id}, e.g. `curl -i -d '{"name":"janet", "move":"paper"}' http://localhost:8080/games/1`
 
 ## Running tests
-Tests for game logic are in rps.tt and can be run by
+Tests for game logic are in rps.tt and can be run by `gradle rpsTest` or
 ```
 java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar" --test tailspin.Tailspin rps.tt
 ```

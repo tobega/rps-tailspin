@@ -1,0 +1,52 @@
+plugins {
+    id 'java'
+}
+
+task getTailspin {
+  ant.mkdir(dir:"lib")
+  ant.get(src: 'https://raw.githubusercontent.com/tobega/tailspin-v0/master/tailspin.jar', dest: new File('lib/tailspin.jar'))
+}
+
+compileJava.dependsOn getTailspin
+
+repositories {
+    flatDir {
+      dirs 'lib'
+    }
+    mavenCentral()
+}
+
+configurations {
+  undertow
+}
+
+dependencies {
+    runtimeOnly name: 'tailspin'
+    runtimeOnly group: 'org.antlr', name: 'antlr4-runtime', version: '4.8-1'
+    undertow group: 'io.undertow', name: 'undertow-core', version: '2.2.2.Final'
+    undertow group: 'org.jboss.xnio', name: 'xnio-api', version: '3.8.2.Final'
+    undertow group: 'org.jboss.xnio', name: 'xnio-nio', version: '3.8.2.Final'
+    undertow group: 'org.jboss.logging', name: 'jboss-logging', version: '3.4.1.Final'
+    undertow group: 'org.wildfly.common', name: 'wildfly-common', version: '1.5.4.Final'
+    undertow group: 'org.jboss.threads', name: 'jboss-threads', version: '3.2.0.Final'
+}
+
+task undertow(type: JavaExec) {
+  classpath = configurations.undertow + sourceSets.main.runtimeClasspath
+  main = 'tailspin.Tailspin'
+  args 'server.tt'
+  environment 'TAILSPIN_MODULES', 'modules'
+}
+
+task jdkserver(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'tailspin.Tailspin'
+  args 'jdkserver.tt'
+  environment 'TAILSPIN_MODULES', 'modules'
+}
+
+task rpsTest(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  main = 'tailspin.Tailspin'
+  args '--test', 'rps.tt'
+}
