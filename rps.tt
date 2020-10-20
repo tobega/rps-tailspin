@@ -1,4 +1,4 @@
-def moves: ['rock', 'paper', 'scissors'];
+def moves: ['rock', 'paper', 'scissors', 'spock', 'lizard'];
 // returns an array containing the index of the input move,
 // or an empty array if the input move was not found
 templates findMoveIndex
@@ -16,7 +16,7 @@ templates getWinner
     'It''s a tie' !
 
   otherwise
-    '$players($).name; wins' !
+    '$players(($ + 1) mod 2 + 1).name; wins' !
 end getWinner
 
 test 'rock, paper, scissors result'
