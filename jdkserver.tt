@@ -5,10 +5,6 @@ use 'module:jdk/http' with
   'java:com.sun.net.httpserver' stand-alone
 provided
 
-// require 'java:com.sun.net.httpserver'
-// require 'java:java.net'
-// require 'java:java.io'
-
 include 'server'
 
 $server/config -> !http/startServer&{port: 8080, name: 'localhost'}
