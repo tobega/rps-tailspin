@@ -37,22 +37,22 @@ processor GameService
     templates describeStatus
       // players array contains two players with moves
       when <{players: <[<{move: <>}>=2]>}> do
-        {id: $id, status: '$.players -> getWinner;', players: $.players, legalMoves: $moves} !
+        (status: '$.players -> getWinner;') ! (players: $.players) !
 
       // there is currently only one player
       when <{players: <[](1)>}> do
-        {id: $id, status: '$.players(1).name; is waiting for an opponent', legalMoves: $moves} !
+        (status: '$.players(1).name; is waiting for an opponent') !
 
       otherwise
         $.players -> \[i](
           <~{move: <>}> $.name ! 'and' !
         \) -> $(1..last-1)
-          -> {id: $id, status: 'Waiting for $... -> '$; ';to move', legalMoves: $moves} !
+          -> (status: 'Waiting for $... -> '$; ';to move') !
     end describeStatus
 
     $id -> #
     when <1..$@GameService::length>
-      $@GameService($id) -> describeStatus !
+      {id: $id, $@GameService($id) -> describeStatus, legalMoves: $moves} !
     otherwise '' !
   end getStatus
 
