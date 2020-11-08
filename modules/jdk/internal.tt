@@ -1,8 +1,3 @@
-templates toByteArray
-  def javaString: $ -> lang/String;
-  'utf-8' -> $javaString::getBytes !
-end toByteArray
-
 composer pathParts
   [<='/'|'\w+'>+]
 end pathParts
@@ -85,9 +80,8 @@ processor RoutingContext
     \);
     def result: {parameters: $handler.parameters, body: $requestBody} -> handler.handler::handleRequest ->
       {statusCode: 200, headers: [], body: '', $...};
-    def responseBody: $result.body -> toByteArray;
-    // ridiculous to get length of byte array via ByteArrayInputStream
-    [$result.statusCode, $responseBody -> io/ByteArrayInputStream -> $::available] -> !exchange::sendResponseHeaders
+    def responseBody: $result.body::asUtf8Bytes;
+    [$result.statusCode, $responseBody::length] -> !exchange::sendResponseHeaders
     def os: $exchange::getResponseBody;
     $responseBody -> os::write -> !VOID
     $os::close -> !VOID
