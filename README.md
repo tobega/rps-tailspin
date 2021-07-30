@@ -26,16 +26,18 @@ For the undertow version of the code you additionally need these dependencies (o
         "lib/wildfly-common-1.5.4.Final.jar",
         "lib/jboss-threads-3.2.0.Final.jar"
 
+You also need to allow reflection access to java.base/java.util
+
 Then run
 ```
-TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar:lib/undertow-core-2.2.1.Final.jar:lib/xnio-api-3.8.2.Final.jar:lib/xnio-nio-3.8.2.Final.jar:lib/jboss-logging-3.4.1.Final.jar:lib/wildfly-common-1.5.4.Final.jar:lib/jboss-threads-3.2.0.Final.jar" tailspin.Tailspin server.tt
+TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar:lib/undertow-core-2.2.1.Final.jar:lib/xnio-api-3.8.2.Final.jar:lib/xnio-nio-3.8.2.Final.jar:lib/jboss-logging-3.4.1.Final.jar:lib/wildfly-common-1.5.4.Final.jar:lib/jboss-threads-3.2.0.Final.jar" --add-opens java.base/java.util=ALL-UNNAMED tailspin.Tailspin server.tt
 ```
 
 ### JDK version
-The version that uses the built-in http-server from the jdk needs no additional dependencies.
+The version that uses the built-in http-server from the jdk needs no additional dependencies, but you do need to allow reflection access to jdk.httpserver/sun.net.httpserver.
 Just run
 ```
-TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar" tailspin.Tailspin jdkserver.tt
+TAILSPIN_MODULES=modules java -cp "lib/tailspin.jar:lib/antlr-runtime-4.8.jar" --add-opens jdk.httpserver/sun.net.httpserver=ALL-UNNAMED tailspin.Tailspin jdkserver.tt
 ```
 
 ## Playing the game
