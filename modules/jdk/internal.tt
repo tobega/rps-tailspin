@@ -82,8 +82,8 @@ processor RoutingContext
     \);
     def result: {parameters: $handler.parameters, body: $requestBody} -> handler.handler::handleRequest ->
       {statusCode: 200, headers: [], body: '', $...};
-    def responseBody: $result.body::asUtf8Bytes;
-    [$result.statusCode, $responseBody::length] -> !exchange::sendResponseHeaders
+    def responseBody: $result.body::raw -> $::asUtf8Bytes;
+    [$result.statusCode::raw, $responseBody::length] -> !exchange::sendResponseHeaders
     def os: $exchange::getResponseBody;
     $responseBody -> os::write -> !VOID
     $os::close -> !VOID

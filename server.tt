@@ -7,6 +7,8 @@ provided
 include 'rps'
 include 'json'
 
+data value <>
+
 def rpsService: $rps/GameService;
 
 templates convertRpsResult

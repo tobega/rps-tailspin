@@ -4,7 +4,7 @@ plugins {
 
 task getTailspin {
   ant.mkdir(dir:"lib")
-  ant.get(src: 'https://raw.githubusercontent.com/tobega/tailspin-v0/data-dictionary/tailspin.jar', dest: new File('lib/tailspin.jar'))
+  ant.get(src: 'https://raw.githubusercontent.com/tobega/tailspin-v0/master/tailspin.jar', dest: new File('lib/tailspin.jar'))
 }
 
 compileJava.dependsOn getTailspin
@@ -34,7 +34,7 @@ dependencies {
 task undertow(type: JavaExec) {
   classpath = configurations.undertow + sourceSets.main.runtimeClasspath
   jvmArgs '--add-opens', 'java.base/java.util=ALL-UNNAMED'
-  main = 'tailspin.Tailspin'
+  mainClass = 'tailspin.Tailspin'
   args 'server.tt'
   environment 'TAILSPIN_MODULES', 'modules'
 }
@@ -42,13 +42,13 @@ task undertow(type: JavaExec) {
 task jdkserver(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   jvmArgs '--add-opens', 'jdk.httpserver/sun.net.httpserver=ALL-UNNAMED'
-  main = 'tailspin.Tailspin'
+  mainClass = 'tailspin.Tailspin'
   args 'jdkserver.tt'
   environment 'TAILSPIN_MODULES', 'modules'
 }
 
 task rpsTest(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
-  main = 'tailspin.Tailspin'
+  mainClass = 'tailspin.Tailspin'
   args '--test', 'rps.tt'
 }

@@ -1,10 +1,10 @@
 sink sendResult&{exchange:}
   def result: {statusCode: 200, headers: [], body: '', $...};
-  $result.statusCode -> exchange::setStatusCode -> !VOID
+  $result.statusCode::raw -> exchange::setStatusCode -> !VOID
   def headers: $exchange::getResponseHeaders;
-  $result.headers... -> [$.header -> util/HttpString, $.value] -> headers::put -> !VOID
+  $result.headers... -> [$.header::raw -> util/HttpString, $.value::raw] -> headers::put -> !VOID
   def sender: $exchange::getResponseSender;
-  $result.body -> !sender::send
+  $result.body::raw -> !sender::send
 end sendResult
 
 templates getParameters
@@ -37,8 +37,8 @@ end GetHandler
 
 templates createHandler
   def router: $server/RoutingHandler;
-  $... -> \(<{post: <>}> $!\) -> [$.post, $.handler -> PostHandler] -> router::post -> !VOID
-  $... -> \(<{get: <>}> $!\) -> [$.get, $.handler -> GetHandler] -> router::get -> !VOID
+  $... -> \(<{post: <>}> $!\) -> [$.post::raw, $.handler -> PostHandler] -> router::post -> !VOID
+  $... -> \(<{get: <>}> $!\) -> [$.get::raw, $.handler -> GetHandler] -> router::get -> !VOID
   $router !
 end createHandler
 
