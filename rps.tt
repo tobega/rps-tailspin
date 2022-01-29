@@ -6,7 +6,7 @@ templates findMoveIndex
   $moves -> \[j](<=$move> $j !\) !
 end findMoveIndex
 
-data players <[<{name: <'.+'> VOID}|{name: <name>, move: <'.+'> VOID}>+ VOID]>
+data players <[<{name: <'.+'> VOID}|{name: <name>, move: <'.+'> VOID}>+ VOID](1..2)>
 
 templates getWinner
   def players: $;
