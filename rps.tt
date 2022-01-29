@@ -6,6 +6,8 @@ templates findMoveIndex
   $moves -> \[j](<=$move> $j !\) !
 end findMoveIndex
 
+data players <[<{name: <'.+'> VOID}|{name: <name>, move: <'.+'> VOID}>+ VOID]>
+
 templates getWinner
   def players: $;
   $ -> \[i]($.move -> findMoveIndex ... ! \)
@@ -109,3 +111,20 @@ test 'simple game'
   assert {name: 'B', move: 'paper'} -> service::updateGame&{id: $createResponse.id}
     <{id:<=$createResponse.id>, status:<='B wins'>}> 'join resolves game'
 end 'simple game'
+
+test 'add move later and change it'
+  def service: $GameService;
+  def createResponse: {name: 'A'} -> service::createGame;
+
+  assert {name: 'A', move: 'paper'} -> service::updateGame&{id: $createResponse.id}
+    <{id:<=$createResponse.id>, status:<='A is waiting for an opponent'>}> 'A makes move'
+
+  assert {name: 'A', move: 'rock'} -> service::updateGame&{id: $createResponse.id}
+    <{id:<=$createResponse.id>, status:<='A is waiting for an opponent'>}> 'A can change move'
+end 'add move later and change it'
+
+test 'try illegal move'
+  def service: $GameService;
+  assert {name: 'A', move: 'camel'} -> service::createGame
+    <='camel is not a recognized move. Please pick one of [rock, paper, scissors, spock, lizard]'> 'illegal move'
+end 'try illegal move'
