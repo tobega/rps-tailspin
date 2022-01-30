@@ -3,10 +3,13 @@ A rock-paper-scissors server written in [tailspin](https://github.com/tobega/tai
 
 The purpose is to explore what might be good Tailspin style, how the Tailspin module system works and how Tailspin http APIs could be structured, beyond the simpler programming puzzles in Rosettacode or Adventofcode.
 
-The game logic is in rps.tt, the main program is in server.tt with json parsing in json.tt.
+The game logic is written in two ways, in rps.tt as data and pattern-matching functions,
+and in rpsts.tt as a processor (object) with typestates (state pattern).
+The choice of game logic is done in the main program in server.tt. The json parsing is in json.tt.
 The Undertow usage is in a tailspin module in modules/undertow/http.tt.
 
-There is also a second version which replaces Undertow with the jdk built-in http server. The main program there is jdkserver.tt which includes the Tailspin code from server.tt.
+There is also another version which replaces Undertow with the jdk built-in http server.
+The main program there is jdkserver.tt which includes the Tailspin code from server.tt. The coice of game logic module still applies.
 The http module is in modules/jdk/http.tt and exposes the same API as the undertow module.
 
 ## Starting the server using gradle

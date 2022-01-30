@@ -1,0 +1,118 @@
+include 'rps'
+
+processor Game
+  @New: {name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)};
+
+  sink checkFinished
+    when <[<{move:<>}>=2]> do @Finished: $;
+  end checkFinished
+
+  state New
+    source describeStatus
+      (status: '$@New.name; is waiting for an opponent') !
+    end describeStatus
+    templates update
+      when <{name: <=$@New.name>}> do
+        // If the input contains a move, add it or update it
+        $ -> \(<{move:<>}> $.move !\) -> ..|@New: (move: $);
+
+      otherwise
+        @Joined: [$@New, {name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)}];
+        $@Joined -> !checkFinished
+    end update
+  end New
+
+  state Joined
+    source describeStatus
+      $@Joined -> \[i](
+        <~{move: <>}> $.name ! 'and' !
+      \) -> $(1..last-1)
+      -> (status: 'Waiting for $... -> '$; ';to move') !
+    end describeStatus
+    templates update
+      when <{name: <=$@Joined(1).name>}> do
+        // If the input contains a move, add it or update it
+        $ -> \(<{move:<>}> $.move !\) -> ..|@Joined(1): (move: $);
+        $@Joined -> !checkFinished
+
+      when <{name: <=$@Joined(2).name>}> do
+        // If the input contains a move, add it or update it
+        $ -> \(<{move:<>}> $.move !\) -> ..|@Joined(2): (move: $);
+        $@Joined -> !checkFinished
+
+      otherwise
+        'The game is already full' !
+    end update
+  end Joined
+
+  state Finished
+    source describeStatus
+      (status: '$@Finished -> rps/getWinner;') ! (players: $@Finished) !
+    end describeStatus
+    templates update
+      'This game is already finished' !
+    end update
+  end Finished
+end Game
+
+processor GameService
+  @: [];
+
+  source getStatus&{id:}
+    $id -> #
+    when <1..$@GameService::length>
+      {id: $id, $@GameService($id)::describeStatus, legalMoves: $rps/moves} !
+    otherwise '' !
+  end getStatus
+
+  templates createGame
+    when <~{name: <'.+'>}> do 'Please give a name' !
+
+    when <{move: <?($ -> rps/findMoveIndex <=[]>)>}> do
+      '$.move; is not a recognized move. Please pick one of $rps/moves;' !
+
+    otherwise
+      $ -> Game -> ..|@GameService: $;
+      $getStatus&{id:$@GameService::length}  !
+  end createGame
+
+  templates updateGame&{id:}
+    when <?($id <1..$@GameService::length>)> do
+      $ -> \(
+        when <{move: <?($ -> rps/findMoveIndex <=[]>)>}> do
+          '$.move; is not a recognized move. Please pick one of $rps/moves;' !
+
+        // input does not have a name of at least one character
+        when <~{name: <'.+'>}> do 'Please give a name' !
+
+        otherwise [$ -> @GameService($id)::update] -> \(when <=[]> do $getStatus&{id:$id} ! otherwise $(1)!\) !
+      \) !
+    otherwise '' !
+  end updateGame
+end GameService
+
+test 'simple game'
+  def service: $GameService;
+  def createResponse: {name: 'A', move: 'rock'} -> service::createGame;
+  assert $createResponse <{id:<>, status:<='A is waiting for an opponent'>}> 'create returns id and status'
+
+  assert {name: 'B', move: 'paper'} -> service::updateGame&{id: $createResponse.id}
+    <{id:<=$createResponse.id>, status:<='B wins'>}> 'join resolves game'
+end 'simple game'
+
+test 'add move later and change it'
+  def service: $GameService;
+  def createResponse: {name: 'A'} -> service::createGame;
+
+  assert {name: 'A', move: 'paper'} -> service::updateGame&{id: $createResponse.id}
+    <{id:<=$createResponse.id>, status:<='A is waiting for an opponent'>}> 'A makes move'
+
+  assert {name: 'A', move: 'rock'} -> service::updateGame&{id: $createResponse.id}
+    <{id:<=$createResponse.id>, status:<='A is waiting for an opponent'>}> 'A can change move'
+end 'add move later and change it'
+
+test 'try illegal move'
+  def service: $GameService;
+  assert {name: 'A', move: 'camel'} -> service::createGame
+    <='camel is not a recognized move. Please pick one of [rock, paper, scissors, spock, lizard]'> 'illegal move'
+end 'try illegal move'

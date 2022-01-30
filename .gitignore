@@ -3,3 +3,6 @@ lib/
 .classpath
 .project
 org.eclipse.*
+gradlew*
+.idea/
+gradle/

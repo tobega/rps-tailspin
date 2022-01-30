@@ -4,7 +4,9 @@ use 'module:undertow/http' with
   'java:io.undertow.util' stand-alone
 provided
 
-include 'rps'
+//include 'rps'
+include rps from 'rpsts'
+
 include 'json'
 
 data value <>

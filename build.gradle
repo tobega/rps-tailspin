@@ -35,7 +35,7 @@ task undertow(type: JavaExec) {
   classpath = configurations.undertow + sourceSets.main.runtimeClasspath
   jvmArgs '--add-opens', 'java.base/java.util=ALL-UNNAMED'
   mainClass = 'tailspin.Tailspin'
-  args 'server.tt'
+  args 'server.tt', impl
   environment 'TAILSPIN_MODULES', 'modules'
 }
 
@@ -51,4 +51,10 @@ task rpsTest(type: JavaExec) {
   classpath = sourceSets.main.runtimeClasspath
   mainClass = 'tailspin.Tailspin'
   args '--test', 'rps.tt'
+}
+
+task rpstsTest(type: JavaExec) {
+  classpath = sourceSets.main.runtimeClasspath
+  mainClass = 'tailspin.Tailspin'
+  args '--test', 'rpsts.tt'
 }
