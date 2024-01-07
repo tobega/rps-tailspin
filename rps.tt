@@ -1,12 +1,13 @@
-def moves: ['rock', 'paper', 'scissors', 'spock', 'lizard'];
+data player <{name: <'.+'> VOID}|{name: <name>, move: <'.+'> VOID}>
+data players <[<player>+ VOID](1..2)>
+
+def moves: [move´'rock', move´'paper', move´'scissors', move´'spock', move´'lizard'];
 // returns an array containing the index of the input move,
 // or an empty array if the input move was not found
 templates findMoveIndex
   def move: $;
   $moves -> \[j](<=$move> $j !\) !
 end findMoveIndex
-
-data players <[<{name: <'.+'> VOID}|{name: <name>, move: <'.+'> VOID}>+ VOID](1..2)>
 
 templates getWinner
   def players: $;
@@ -33,12 +34,13 @@ test 'rock, paper, scissors result'
 end 'rock, paper, scissors result'
 
 processor GameService
-  @: [];
+  data hasMove <{move: <>}> local
+  @: id´1:[];
 
   source getStatus&{id:}
     templates describeStatus
       // players array contains two players with moves
-      when <{players: <[<{move: <>}>=2]>}> do
+      when <{players: <[<hasMove>=2]>}> do
         (status: '$.players -> getWinner;') ! (players: $.players) !
 
       // there is currently only one player
@@ -47,13 +49,13 @@ processor GameService
 
       otherwise
         $.players -> \[i](
-          <~{move: <>}> $.name ! 'and' !
+          <~hasMove> $.name ! 'and' !
         \) -> $(1..last-1)
           -> (status: 'Waiting for $... -> '$; ';to move') !
     end describeStatus
 
     $id -> #
-    when <1..$@GameService::length>
+    when <$@GameService::first..$@GameService::last>
       {id: $id, $@GameService($id) -> describeStatus, legalMoves: $moves} !
     otherwise '' !
   end getStatus
@@ -61,20 +63,20 @@ processor GameService
   templates createGame
     when <~{name: <'.+'>}> do 'Please give a name' !
 
-    when <{move: <?($ -> findMoveIndex <=[]>)>}> do
+    when <hasMove ?($.move -> findMoveIndex <=[]>)> do
       '$.move; is not a recognized move. Please pick one of $moves;' !
 
     otherwise
-      { players: [{name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)}]} -> ..|@GameService: $;
+      { players: [{name: $.name, $ -> \(<hasMove> $.move !\) -> (move: $)}]} -> ..|@GameService: $;
       $getStatus&{id:$@GameService::length}  !
   end createGame
 
   templates updateGame&{id:}
-    when <?($id <1..$@GameService::length>)> do
+    when <?($id <$@GameService::first..$@GameService::last>)> do
       def game: $@GameService($id);
       $ -> \(
         // players array contains two players with moves
-        when <?($game <{players: <[<{move: <>}>=2]>}>)> do
+        when <?($game <{players: <[<hasMove>=2]>}>)> do
           'This game is already finished' !
 
         when <{move: <?($ -> findMoveIndex <=[]>)>}> do
@@ -85,16 +87,16 @@ processor GameService
 
         when <{name: <=$game.players(1).name>}> do
           // If the input contains a move, add it or update it
-          $ -> \(<{move:<>}> $.move !\) -> ..|@GameService($id).players(1): (move: $);
+          $ -> \(<hasMove> $.move !\) -> ..|@GameService($id).players(1): (move: $);
           $getStatus&{id: $id} !
 
         // there is currently only one player
         when <?($game.players <[](1)>)> do
-          ..|@GameService($id).players: {name: $.name, $ -> \(<{move:<>}> $.move !\) -> (move: $)};
+          ..|@GameService($id).players: {name: $.name, $ -> \(<hasMove> $.move !\) -> (move: $)};
             $getStatus&{id: $id} !
 
         when <{name: <=$game.players(2).name>}> do
-          $ -> \(<{move:<>}> $.move !\) -> ..|@GameService($id).players(2): (move: $);
+          $ -> \(<hasMove> $.move !\) -> ..|@GameService($id).players(2): (move: $);
           $getStatus&{id: $id} !
 
         otherwise 'The game is already full' !

@@ -58,12 +58,12 @@ templates serialize
     <='$#9;'> '\t' !
     <> $ !
   end encodeChars
-  $ -> #
+  $::raw -> #
   when <[]> do
     '[$(1) -> serialize;$(2..last)... -> ', $ -> serialize;';]' !
   when <{}> do
     [ $... ] -> '{$(1) -> serializeKeyValue;$(2..last)... -> ', $ -> serializeKeyValue;';}' !
-  when <..0|0..> do
+  when <´´ ..0|0..> do
     '$;'!
   when <'.*'> do
     [ $... -> encodeChars ] -> '"$...;"' !

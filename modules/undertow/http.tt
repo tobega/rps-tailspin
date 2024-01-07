@@ -5,6 +5,6 @@
 include 'private'
 
 sink startServer&{port:,name:}
-  def server: $ -> private/createHandler -> private/createServer&{port: $port, name: $name};
+  def server: $ -> createHandler -> createServer&{port: $port, name: $name};
   $server::start -> !VOID
 end startServer

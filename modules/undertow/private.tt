@@ -37,8 +37,8 @@ end GetHandler
 
 templates createHandler
   def router: $server/RoutingHandler;
-  $... -> \(<{post: <>}> $!\) -> [$.post::raw, $.handler -> PostHandler] -> router::post -> !VOID
-  $... -> \(<{get: <>}> $!\) -> [$.get::raw, $.handler -> GetHandler] -> router::get -> !VOID
+  $... -> \(<´{handler: <>}´ {post: <>}> $! \) -> [$.post::raw, $.handler -> PostHandler] -> router::post -> !VOID
+  $... -> \(<´{handler: <>}´ {get: <>}> $! \) -> [$.get::raw, $.handler -> GetHandler] -> router::get -> !VOID
   $router !
 end createHandler
 

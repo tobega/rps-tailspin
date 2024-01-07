@@ -47,7 +47,7 @@ processor Game
 
   state Finished
     source describeStatus
-      (status: '$@Finished -> rps/getWinner;') ! (players: $@Finished) !
+      (status: '$@Finished -> getWinner;') ! (players: $@Finished) !
     end describeStatus
     templates update
       'This game is already finished' !
@@ -56,20 +56,20 @@ processor Game
 end Game
 
 processor GameService
-  @: [];
+  @: id´1:[];
 
   source getStatus&{id:}
     $id -> #
-    when <1..$@GameService::length>
-      {id: $id, $@GameService($id)::describeStatus, legalMoves: $rps/moves} !
+    when <$@GameService::first..$@GameService::last>
+      {id: $id, $@GameService($id)::describeStatus, legalMoves: $moves} !
     otherwise '' !
   end getStatus
 
   templates createGame
-    when <~{name: <'.+'>}> do 'Please give a name' !
+    when <~ player> do 'Please give a name' !
 
-    when <{move: <?($ -> rps/findMoveIndex <=[]>)>}> do
-      '$.move; is not a recognized move. Please pick one of $rps/moves;' !
+    when <´{}´ {move: <?($ -> findMoveIndex <=[]>)>}> do
+      '$.move; is not a recognized move. Please pick one of $moves;' !
 
     otherwise
       $ -> Game -> ..|@GameService: $;
@@ -77,10 +77,10 @@ processor GameService
   end createGame
 
   templates updateGame&{id:}
-    when <?($id <1..$@GameService::length>)> do
+    when <?($id <$@GameService::first..$@GameService::last>)> do
       $ -> \(
-        when <{move: <?($ -> rps/findMoveIndex <=[]>)>}> do
-          '$.move; is not a recognized move. Please pick one of $rps/moves;' !
+        when <{move: <?($ -> findMoveIndex <=[]>)>}> do
+          '$.move; is not a recognized move. Please pick one of $moves;' !
 
         // input does not have a name of at least one character
         when <~{name: <'.+'>}> do 'Please give a name' !

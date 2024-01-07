@@ -7,6 +7,6 @@ include 'internal'
 
 sink startServer&{port:,name:}
   def server: [[$name, $port] -> net/InetSocketAddress, 0] -> httpserver/HttpServer::create;
-  ['/', $ -> internal/RoutingContext] -> server::createContext -> !VOID
+  ['/', $ -> RoutingContext] -> server::createContext -> !VOID
   $server::start -> !VOID
 end startServer

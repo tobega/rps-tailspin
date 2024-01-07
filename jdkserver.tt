@@ -3,8 +3,9 @@ use 'module:jdk/http' with
   'java:java.lang' stand-alone
   'java:java.net' stand-alone
   'java:com.sun.net.httpserver' stand-alone
+  core-system/ inherited
 provided
 
 include 'server'
 
-$server/config -> !http/startServer&{port: 8080, name: 'localhost'}
+$config -> !http/startServer&{port: 8080, name: 'localhost'}

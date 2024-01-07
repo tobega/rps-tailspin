@@ -5,18 +5,19 @@ use 'module:undertow/http' with
 provided
 
 //include 'rps'
-include rps from 'rpsts'
+include 'rpsts'
 
 include 'json'
 
 data value <>
 
-def rpsService: $rps/GameService;
+def rpsService: $GameService;
 
 templates convertRpsResult
-  when <=''> do {statusCode: 404} !
-  when <'.*'> do {statusCode: 400, body: $} !
-  otherwise {body: $ -> json/serialize,
+  when <´´ =''> do {statusCode: 404} !
+  when <´´ '.*'> do {statusCode: 400, body: $} !
+  otherwise
+    {body: $ -> serialize,
     headers:[{header:'Content-Type', value:'application/json'}]} !
 end convertRpsResult
 
@@ -26,7 +27,7 @@ end toInt
 
 processor CreateGameHandler
   templates handleRequest
-    $.body -> json/parse -> rpsService::createGame -> convertRpsResult !
+    $.body -> parse -> rpsService::createGame -> convertRpsResult !
   end handleRequest
 end CreateGameHandler
 
@@ -40,13 +41,16 @@ end GetGameStatusHandler
 processor UpdateGameHandler
   templates handleRequest
     def id: $.parameters... -> \(<{key: <='id'>}> $.value(1) !\) -> toInt;
-    $.body -> json/parse -> rpsService::updateGame&{id: $id} -> convertRpsResult !
+    $.body -> parse -> rpsService::updateGame&{id: $id} -> convertRpsResult !
   end handleRequest
 end UpdateGameHandler
 
-def config: [{post: '/games', handler: $CreateGameHandler},
-  {get: '/games/{id}', handler: $GetGameStatusHandler},
-  {post: '/games/{id}', handler: $UpdateGameHandler}
+data uri-pattern <'(\/(\w+|\{\w+\}))+'>,
+  routing <{post: <uri-pattern>, handler: <>}|{get: <uri-pattern>, handler: <handler>}>
+
+def config: [{post: uri-pattern´'/games', handler: $CreateGameHandler},
+  {get: uri-pattern´'/games/{id}', handler: $GetGameStatusHandler},
+  {post: uri-pattern´'/games/{id}', handler: $UpdateGameHandler}
 ];
 
 $config -> !http/startServer&{port: 8080, name: 'localhost'}
